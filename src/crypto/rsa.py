@@ -11,6 +11,7 @@
 
 import secrets
 from dataclasses import dataclass
+from math import gcd
 
 
 @dataclass
@@ -31,14 +32,25 @@ class PrivateKey:
 class RSA:
     """RSA encryption and decryption class."""
 
-    def __init__(self) -> None:
-        pass
+    def __init__(
+            self, public: PublicKey | None = None, private: PrivateKey | None = None
+            ) -> None:
+        """
+        Initialize the RSA class.
+
+        Args:
+            public (PublicKey, optional): Public key. Defaults to None.
+            private (PrivateKey, optional): Private key. Defaults to None.
+
+        """
+        self.public = public
+        self.private = private
 
     @staticmethod
     def _generate_prime() -> int:
         """Generate a random prime number."""
         while True:
-            num = secrets.randbelow(9999999) + 100000
+            num = secrets.randbelow(99999999999999) + 1000000
             if RSA._miller_rabin(num, 20):
                 return num
 
@@ -87,11 +99,34 @@ class RSA:
 
 
     def generate_keys(self) -> None:
+        """Generate an RSA key pair."""
+        p = self._generate_prime()
+        q = self._generate_prime()
+        while q == p:
+            q = self._generate_prime()
 
-        pass
+        n = p * q
+        phi = (p - 1) * (q - 1)
+        e = 65537
+        while gcd(e, phi) != 1 or e >= phi:
+            e = secrets.randbelow(phi - 1) + 3
+
+        d = pow(e, -1, phi)
+        self.public = PublicKey(n, e)
+        self.private = PrivateKey(n, d)
 
     def encrypt(self, plaintext: str, public_key: PublicKey) -> str:
-        """Encrypt the plaintext using the public key."""
+        """
+        Encrypt the plaintext using the public key.
+
+        Args:
+            plaintext (str): The plaintext to encrypt.
+            public_key (PublicKey): The public key to use for encryption.
+
+        Returns:
+            str: The encrypted ciphertext.
+
+        """
         return ""
 
     def decrypt(self, ciphertext: str, private_key: PrivateKey) -> str:
