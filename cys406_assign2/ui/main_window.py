@@ -14,7 +14,7 @@ class MainWindow(Adw.ApplicationWindow):
     def __init__(self, application: Adw.Application) -> None:
         """Initialize the main window."""
         super().__init__(application=application, title="CYS406 Assignment 2")
-        self.set_size_request(800, 600)
+        self.set_size_request(800, 700)
 
         layout = Adw.ToolbarView()
         self.set_content(layout)

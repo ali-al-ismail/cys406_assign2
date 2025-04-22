@@ -98,19 +98,44 @@ class RSAView(Adw.Bin):
         sidebar_box.append(self.keygen_button)
 
         # expander row for public key
-        public_key_expander = Adw.ExpanderRow(title="Public Key")
-        self.pke = Adw.EntryRow(title = "e")
-        self.pkn = Adw.EntryRow(title = "n")
-        public_key_expander.add_row(self.pke)
-        public_key_expander.add_row(self.pkn)
+        public_key_expander = Adw.ExpanderRow(title="Public Key",
+            height_request=250,)
+        self.pke = Gtk.TextView(wrap_mode=Gtk.WrapMode.CHAR, vexpand=True)
+        self.pkn = Gtk.TextView(wrap_mode=Gtk.WrapMode.CHAR, vexpand=True)
+        public_key_expander.add_row(
+            Gtk.Frame(
+                child=Gtk.ScrolledWindow(child=self.pke),
+                label="e",
+                margin_bottom=15
+            )
+        )
+        public_key_expander.add_row(
+            Gtk.Frame(
+                child=Gtk.ScrolledWindow(child=self.pkn),
+                label="n",
+                margin_bottom=15
+            )
+        )
         sidebar_box.append(public_key_expander)
 
         # expander row for private key
         private_key_expander = Adw.ExpanderRow(title="Private Key")
-        self.prvn = Adw.EntryRow(title = "n")
-        self.prvd = Adw.EntryRow(title = "d")
-        private_key_expander.add_row(self.prvn)
-        private_key_expander.add_row(self.prvd)
+        self.prvn = Gtk.TextView(wrap_mode=Gtk.WrapMode.CHAR, vexpand=True)
+        self.prvd = Gtk.TextView(wrap_mode=Gtk.WrapMode.CHAR, vexpand=True)
+        private_key_expander.add_row(
+            Gtk.Frame(
+                child=Gtk.ScrolledWindow(child=self.prvd),
+                label="d",
+                margin_bottom=15
+            )
+        )
+        private_key_expander.add_row(
+            Gtk.Frame(
+                child=Gtk.ScrolledWindow(child=self.prvn),
+                label="n",
+                margin_bottom=15
+            )
+        )
         sidebar_box.append(private_key_expander)
 
         # main box
