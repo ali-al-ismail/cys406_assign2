@@ -21,3 +21,12 @@ def test_keygen() -> None:
     assert rsa.public is not None
     assert rsa.private is not None
     assert rsa.public.n == rsa.private.n
+
+def test_encrypt_decrypt() -> None:
+    """Test the RSA encryption and decryption."""
+    rsa = RSA()
+    rsa.generate_keys()
+    plaintext = b"Hello"
+    ciphertext = rsa.encrypt(plaintext)
+    decrypted = rsa.decrypt(ciphertext)
+    assert decrypted == plaintext
