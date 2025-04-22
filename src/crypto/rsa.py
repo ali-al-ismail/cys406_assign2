@@ -56,10 +56,32 @@ class RSA:
         self.private = private
 
     @staticmethod
-    def _generate_prime() -> int:
-        """Generate a random prime number."""
+    def _generate_prime(n_bits: int = 512) -> int:
+        """
+        Generate a random prime number.
+
+        This function generates a random prime number of n_bits length
+        using the Miller-Rabin primality test. It first generates a random
+        number of n_bits length and checks if it's divisible by any of the
+        small primes. If it is, it continues to generate a new number.
+        If it's not, it checks if the number is prime using the Miller-Rabin
+
+        Args:
+            n_bits (int): Number of bits for the prime number. Defaults to 2048.
+
+        Returns:
+            int: A random prime number.
+
+        """
+        small_primes = [
+            2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43,
+            47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
+            101, 103, 107, 109, 113, 127, 131, 137, 139, 149
+            ]
         while True:
-            num = secrets.randbelow(99999999999999) + 1000000
+            num = secrets.randbits(n_bits)
+            if any(num % p == 0 for p in small_primes):
+                continue
             if RSA._miller_rabin(num, 20):
                 return num
 
