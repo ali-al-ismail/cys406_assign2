@@ -126,12 +126,13 @@ class RSA:
 
         return True
 
-    def generate_keys(self) -> None:
+    @staticmethod
+    def generate_keys(size: int = 512) -> tuple[PublicKey, PrivateKey]:
         """Generate an RSA key pair."""
-        p = self._generate_prime()
-        q = self._generate_prime()
+        p = RSA._generate_prime(size)
+        q = RSA._generate_prime(size)
         while q == p:
-            q = self._generate_prime()
+            q = RSA._generate_prime(size)
 
         n = p * q
         phi = (p - 1) * (q - 1)
@@ -140,8 +141,7 @@ class RSA:
             e = secrets.randbelow(phi - 1) + 3
 
         d = pow(e, -1, phi)
-        self.public = PublicKey(n, e)
-        self.private = PrivateKey(n, d)
+        return PublicKey(n, e), PrivateKey(n, d)
 
     def encrypt(self, plaintext: bytes) -> bytes:
         """

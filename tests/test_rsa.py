@@ -16,16 +16,18 @@ def test_miller_rabin() -> None:
 
 def test_keygen() -> None:
     """Test the RSA key generation."""
-    rsa = RSA()
-    rsa.generate_keys()
+    public_key, private_key = RSA.generate_keys()
+    rsa = RSA(public_key, private_key)
     assert rsa.public is not None
     assert rsa.private is not None
     assert rsa.public.n == rsa.private.n
 
 def test_encrypt_decrypt() -> None:
     """Test the RSA encryption and decryption."""
-    rsa = RSA()
-    rsa.generate_keys()
+    public_key, private_key = RSA.generate_keys()
+    rsa = RSA(public_key, private_key)
+
+
     plaintext = b"Hello"
     ciphertext = rsa.encrypt(plaintext)
     decrypted = rsa.decrypt(ciphertext)
@@ -33,8 +35,8 @@ def test_encrypt_decrypt() -> None:
 
 def test_sign_verify() -> None:
     """Test the RSA signing and verification."""
-    rsa = RSA()
-    rsa.generate_keys()
+    public_key, private_key = RSA.generate_keys()
+    rsa = RSA(public_key, private_key)
     message = b"Hello"
     signature = rsa.sign(message)
     assert rsa.verify(message, signature)
