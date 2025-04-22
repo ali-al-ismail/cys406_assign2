@@ -12,3 +12,12 @@ def test_miller_rabin() -> None:
     assert RSA._miller_rabin(1009, 5)
     assert not RSA._miller_rabin(10006, 5)
     assert RSA._miller_rabin(10007, 5)
+
+
+def test_keygen() -> None:
+    """Test the RSA key generation."""
+    rsa = RSA()
+    rsa.generate_keys()
+    assert rsa.public is not None
+    assert rsa.private is not None
+    assert rsa.public.n == rsa.private.n
