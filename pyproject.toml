@@ -1,0 +1,11 @@
+[project]
+name = "cys406-assign2"
+version = "0.1.0"
+description = "Applied Cryptography Assignment 2"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pygobject>=3.52.3",
+    "pygobject-stubs>=2.13.0",
+    "ruff>=0.11.6",
+]
