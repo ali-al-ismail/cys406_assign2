@@ -35,9 +35,12 @@ class RSA:
         pass
 
     @staticmethod
-    def _generate_prime(length: int) -> int:
-        """Generate a prime number of given length."""
-        return 1
+    def _generate_prime() -> int:
+        """Generate a random prime number."""
+        while True:
+            num = secrets.randbelow(9999999) + 100000
+            if RSA._miller_rabin(num, 20):
+                return num
 
 
     @staticmethod
@@ -84,6 +87,7 @@ class RSA:
 
 
     def generate_keys(self) -> None:
+
         pass
 
     def encrypt(self, plaintext: str, public_key: PublicKey) -> str:
@@ -93,3 +97,4 @@ class RSA:
     def decrypt(self, ciphertext: str, private_key: PrivateKey) -> str:
         """Decrypt the ciphertext using the private key."""
         return ""
+
