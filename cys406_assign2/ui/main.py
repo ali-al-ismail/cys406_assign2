@@ -5,9 +5,9 @@ import asyncio
 import gi
 
 gi.require_version("Adw", "1")
-from gi.repository import Adw, GLib  # noqa: E402
+from gi.repository import Adw, GLib
 
-from .main_window import MainWindow  # noqa: E402
+from .main_window import MainWindow
 
 
 class Cys406Assign2(Adw.Application):

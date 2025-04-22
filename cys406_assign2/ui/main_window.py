@@ -3,7 +3,9 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gtk  # noqa: E402
+from gi.repository import Adw, Gtk
+
+from .rsa_view import RSAView
 
 
 class MainWindow(Adw.ApplicationWindow):
@@ -21,6 +23,10 @@ class MainWindow(Adw.ApplicationWindow):
         header = Adw.HeaderBar()
         header.set_show_title(True)
         layout.add_top_bar(header)
+
+        self._rsa = RSAView(self)
+        layout.set_content(self._rsa)
+
 
 
 

@@ -70,5 +70,5 @@ select = [
 
 
 extend-per-file-ignores."test_*" = ["S101", "S311", "INP001", "PLR2004", "SLF001"]
-ignore = ["D203", "D212", "COM812", "ISC001", "TD002", "TD003", "FIX"]
+ignore = ["D203", "D212", "COM812", "ISC001", "TD002", "TD003", "FIX", "E402"]
 
