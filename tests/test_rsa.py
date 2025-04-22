@@ -30,3 +30,11 @@ def test_encrypt_decrypt() -> None:
     ciphertext = rsa.encrypt(plaintext)
     decrypted = rsa.decrypt(ciphertext)
     assert decrypted == plaintext
+
+def test_sign_verify() -> None:
+    """Test the RSA signing and verification."""
+    rsa = RSA()
+    rsa.generate_keys()
+    message = b"Hello"
+    signature = rsa.sign(message)
+    assert rsa.verify(message, signature)
