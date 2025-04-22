@@ -14,6 +14,15 @@ from dataclasses import dataclass
 from math import gcd
 
 
+class PublicKeyError(Exception):
+    """Exception raised when the public key is invalid."""
+
+class PrivateKeyError(Exception):
+    """Exception raised when the private key is invalid."""
+
+class MessageTooLongError(Exception):
+    """Exception raised when the message is too long."""
+
 @dataclass
 class PublicKey:
     """Public key class."""
@@ -115,21 +124,46 @@ class RSA:
         self.public = PublicKey(n, e)
         self.private = PrivateKey(n, d)
 
-    def encrypt(self, plaintext: str, public_key: PublicKey) -> str:
+    def encrypt(self, plaintext: bytes) -> bytes:
         """
         Encrypt the plaintext using the public key.
 
         Args:
-            plaintext (str): The plaintext to encrypt.
-            public_key (PublicKey): The public key to use for encryption.
+            plaintext (bytes): The plaintext to encrypt.
 
         Returns:
-            str: The encrypted ciphertext.
+            bytes: The encrypted ciphertext.
 
         """
-        return ""
+        if self.public is None:
+            msg = "Public key is not set."
+            raise PublicKeyError(msg)
 
-    def decrypt(self, ciphertext: str, private_key: PrivateKey) -> str:
-        """Decrypt the ciphertext using the private key."""
-        return ""
+        p_int = int.from_bytes(plaintext, "big")
+        if p_int >= self.public.n:
+            msg = "Message is too long for the public key."
+            raise MessageTooLongError(msg)
+        c_int = pow(p_int, self.public.e, self.public.n)
+        return c_int.to_bytes((c_int.bit_length() + 7) // 8, "big")
+
+    def decrypt(self, ciphertext: bytes) -> bytes:
+        """
+        Decrypt the ciphertext using the private key.
+
+        Args:
+            ciphertext (bytes): The ciphertext to decrypt.
+
+        Returns:
+                str: The decrypted plaintext.
+
+        """
+        if self.private is None:
+            msg = "Private key is not set."
+            raise PrivateKeyError(msg)
+        c_int = int.from_bytes(ciphertext, "big")
+        if c_int >= self.private.n:
+            msg = "Ciphertext is too long for the private key."
+            raise MessageTooLongError(msg)
+        p_int = pow(c_int, self.private.d, self.private.n)
+        return p_int.to_bytes((p_int.bit_length() + 7) // 8, "big")
 
