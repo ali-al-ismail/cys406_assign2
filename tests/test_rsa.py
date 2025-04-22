@@ -1,5 +1,5 @@
 """RSA tests."""
-from src.crypto.rsa import RSA
+from cys406_assign2.crypto.rsa import RSA
 
 
 def test_miller_rabin() -> None:

@@ -1,7 +1,8 @@
 """Application entry point."""
+from cys406_assign2.ui.main import ui
 
 def main():
-    print("Hello from cys-406-assign2!")
+    ui()
 
 
 if __name__ == "__main__":
