@@ -11,6 +11,7 @@
 
 import secrets
 from dataclasses import dataclass
+from hashlib import sha256
 from math import gcd
 
 
@@ -37,7 +38,6 @@ class PrivateKey:
     n: int
     d: int
 
-
 class RSA:
     """RSA encryption and decryption class."""
 
@@ -62,7 +62,6 @@ class RSA:
             num = secrets.randbelow(99999999999999) + 1000000
             if RSA._miller_rabin(num, 20):
                 return num
-
 
     @staticmethod
     def _miller_rabin(n: int, acc: int) -> bool:
@@ -104,8 +103,6 @@ class RSA:
                 return False
 
         return True
-
-
 
     def generate_keys(self) -> None:
         """Generate an RSA key pair."""
@@ -167,3 +164,50 @@ class RSA:
         p_int = pow(c_int, self.private.d, self.private.n)
         return p_int.to_bytes((p_int.bit_length() + 7) // 8, "big")
 
+    def sign(self, message: bytes) -> bytes:
+        """
+        Sign the message using the private key.
+
+        Args:
+            message (bytes): The message to sign.
+
+        Returns:
+            bytes: The signature.
+
+        """
+        if self.private is None:
+            msg = "Private key is not set."
+            raise PrivateKeyError(msg)
+
+        h = sha256(message).digest()
+        h_int = int.from_bytes(h, "big")
+
+        if h_int >= self.private.n:
+            msg = "Message is too long for the private key."
+            raise MessageTooLongError(msg)
+
+        s_int = pow(h_int, self.private.d, self.private.n)
+        return s_int.to_bytes((s_int.bit_length() + 7) // 8, "big")
+
+    def verify(self, message: bytes, signature: bytes) -> bool:
+        """
+        Verify the signature of the message using the public key.
+
+        Args:
+            message (bytes): The message to verify.
+            signature (bytes): The signature to verify.
+
+        Returns:
+            bool: True if the signature is valid, False otherwise.
+
+        """
+        if self.public is None:
+            msg = "Public key is not set."
+            raise PublicKeyError(msg)
+        s_int = int.from_bytes(signature, "big")
+        if s_int >= self.public.n:
+            msg = "Signature is too long for the public key."
+            raise MessageTooLongError(msg)
+        h_int = pow(s_int, self.public.e, self.public.n)
+        h = h_int.to_bytes((h_int.bit_length() + 7) // 8, "big")
+        return sha256(message).digest() == h
