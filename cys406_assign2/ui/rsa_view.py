@@ -8,6 +8,7 @@
 ###
 
 from base64 import b64decode, b64encode
+from binascii import Error as binasciiError
 from typing import TYPE_CHECKING
 
 import gi
@@ -15,11 +16,19 @@ import gi
 if TYPE_CHECKING:
     from cys406_assign2.ui.main_window import MainWindow
 
-from cys406_assign2.crypto.rsa import RSA, PrivateKey, PublicKey
+from cys406_assign2.crypto.rsa import (
+    RSA,
+    MessageTooLongError,
+    PrivateKey,
+    PrivateKeyError,
+    PublicKey,
+    PublicKeyError,
+)
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, GLib, Gtk
+from gi.repository import Adw, Gtk
+
 
 class KeyDialog(Adw.Dialog):
     """Dialog for key generation."""
@@ -38,7 +47,8 @@ class KeyDialog(Adw.Dialog):
         cancel_button.connect("clicked", lambda _: self.close())
         header.pack_start(cancel_button)
 
-        self.confirm_button = Gtk.Button(label="Generate", css_classes=["suggested-action"])
+        self.confirm_button = Gtk.Button(
+            label="Generate", css_classes=["suggested-action"])
         header.pack_end(self.confirm_button)
 
         options = Adw.PreferencesGroup(
@@ -65,6 +75,7 @@ class KeyDialog(Adw.Dialog):
 
 class VerifyDialog(Adw.Dialog):
     """Dialog for verifying a signature."""
+
     def __init__(self) -> None:
         """Initialize verify dialog."""
         super().__init__()
@@ -79,7 +90,8 @@ class VerifyDialog(Adw.Dialog):
         cancel_button.connect("clicked", lambda _: self.close())
         header.pack_start(cancel_button)
 
-        self.confirm_button = Gtk.Button(label="Verify", css_classes=["suggested-action"])
+        self.confirm_button = Gtk.Button(
+            label="Verify", css_classes=["suggested-action"])
         header.pack_end(self.confirm_button)
 
         content = Gtk.Box(
@@ -105,6 +117,18 @@ class VerifyDialog(Adw.Dialog):
         ))
         layout.set_content(content)
 
+    def get_signature(self) -> str:
+        """Get the signature."""
+        start = self._signature.get_buffer().get_start_iter()
+        end = self._signature.get_buffer().get_end_iter()
+        return self._signature.get_buffer().get_text(
+            start, end, include_hidden_chars=False)
+    def get_message(self) -> str:
+        """Get the message."""
+        start = self._message.get_buffer().get_start_iter()
+        end = self._message.get_buffer().get_end_iter()
+        return self._message.get_buffer().get_text(
+            start, end, include_hidden_chars=False)
 
 
 
@@ -113,7 +137,7 @@ class VerifyDialog(Adw.Dialog):
 class RSAView(Adw.Bin):
     """RSA View."""
 
-    def __init__(self, window: "MainWindow") -> None:
+    def __init__(self, window: "MainWindow") -> None:  # noqa: PLR0915
         """Initialize RSA view."""
         super().__init__()
         self.window = window
@@ -147,7 +171,7 @@ class RSAView(Adw.Bin):
 
         # expander row for public key
         public_key_expander = Adw.ExpanderRow(title="Public Key",
-            height_request=250,)
+            height_request=250)
         self.pke = Gtk.TextView(wrap_mode=Gtk.WrapMode.CHAR, vexpand=True)
         self.pkn = Gtk.TextView(wrap_mode=Gtk.WrapMode.CHAR, vexpand=True)
         public_key_expander.add_row(
@@ -263,7 +287,11 @@ class RSAView(Adw.Bin):
 
     def _encrypt(self, _button: Gtk.Button) -> None:
         """Encrypt the input text."""
-        public_key = self._get_public_key()
+        try:
+            public_key = self._get_public_key()
+        except PublicKeyError:
+            self._show_alert("Invalid public key")
+            return
         rsa = RSA(public_key)
         plain_buf = self._input.get_buffer()
         start = plain_buf.get_start_iter()
@@ -271,25 +299,54 @@ class RSAView(Adw.Bin):
         plaintext = plain_buf.get_text(start, end, include_hidden_chars=False)
         if not plaintext:
             return
-        ciphertext = rsa.encrypt(plaintext.encode())
+        try:
+            ciphertext = rsa.encrypt(plaintext.encode())
+        except MessageTooLongError:
+            self._show_alert("Message is too long for the public key")
+            return
         self._output.get_buffer().set_text(b64encode(ciphertext).decode("ascii"))
 
     def _decrypt(self, _button: Gtk.Button) -> None:
         """Decrypt the input text."""
-        private_key = self._get_private_key()
+        try:
+            private_key = self._get_private_key()
+        except PrivateKeyError:
+            self._show_alert("Invalid private key")
+            return
+
         rsa = RSA(private=private_key)
         cipher_buf = self._input.get_buffer()
         start = cipher_buf.get_start_iter()
         end = cipher_buf.get_end_iter()
-        ciphertext = b64decode(cipher_buf.get_text(start, end, include_hidden_chars=False).encode())
+
+        try:
+            ciphertext = b64decode(cipher_buf.get_text(
+                start, end, include_hidden_chars=False).encode())
+        except binasciiError:
+            return
+
         if not ciphertext:
             return
-        plaintext = rsa.decrypt(ciphertext)
-        self._output.get_buffer().set_text(plaintext.decode("ascii"))
+
+        try:
+            plaintext = rsa.decrypt(ciphertext)
+        except MessageTooLongError:
+            self._show_alert("Ciphertext is too long for the private key")
+            return
+
+        try:
+            self._output.get_buffer().set_text(plaintext.decode("ascii"))
+        except UnicodeDecodeError:
+            self._output.get_buffer().set_text("Decryption failed: invalid ciphertext")
+            return
 
     def _sign(self, _button: Gtk.Button) -> None:
         """Sign the input text."""
-        private_key = self._get_private_key()
+        try:
+            private_key = self._get_private_key()
+        except PrivateKeyError:
+            self._show_alert("Invalid private key")
+            return
         rsa = RSA(private=private_key)
         plain_buf = self._input.get_buffer()
         start = plain_buf.get_start_iter()
@@ -301,19 +358,19 @@ class RSAView(Adw.Bin):
         self._output.get_buffer().set_text(b64encode(signature).decode("ascii"))
 
     def _on_verify_clicked(self, _button: Gtk.Button) -> None:
-        """Show verify dialog"""
+        """Show verify dialog."""
         dialog = VerifyDialog()
 
         def on_verify(_button: Gtk.Button) -> None:
             """Verify the signature."""
-            public_key = self._get_public_key()
+            try:
+                public_key = self._get_public_key()
+            except PublicKeyError:
+                self._show_alert("Invalid public key")
+                return
             rsa = RSA(public=public_key)
-            start = dialog._signature.get_buffer().get_start_iter()
-            end = dialog._signature.get_buffer().get_end_iter()
-            signature = b64decode(dialog._signature.get_buffer().get_text(start, end, include_hidden_chars=False).encode())
-            start = dialog._message.get_buffer().get_start_iter()
-            end = dialog._message.get_buffer().get_end_iter()
-            message = dialog._message.get_buffer().get_text(start, end, include_hidden_chars=False).encode()
+            signature = b64decode(dialog.get_signature().encode())
+            message = dialog.get_message().encode()
             if not signature or not message:
                 return
             result = rsa.verify(message, signature)
@@ -331,11 +388,14 @@ class RSAView(Adw.Bin):
         e_buf = self.pke.get_buffer()
         start = n_buf.get_start_iter()
         end = n_buf.get_end_iter()
-        n = int(n_buf.get_text(start, end, include_hidden_chars=False))
-        start = e_buf.get_start_iter()
-        end = e_buf.get_end_iter()
-        e = int(e_buf.get_text(start, end, include_hidden_chars=False))
-        return PublicKey(n, e)
+        try:
+            n = int(n_buf.get_text(start, end, include_hidden_chars=False))
+            start = e_buf.get_start_iter()
+            end = e_buf.get_end_iter()
+            e = int(e_buf.get_text(start, end, include_hidden_chars=False))
+            return PublicKey(n, e)
+        except ValueError as e:
+            raise PublicKeyError from e
 
     def _get_private_key(self) -> PrivateKey:
         """Get the private key."""
@@ -343,8 +403,24 @@ class RSAView(Adw.Bin):
         d_buf = self.prvd.get_buffer()
         start = n_buf.get_start_iter()
         end = n_buf.get_end_iter()
-        n = int(n_buf.get_text(start, end, False))
-        start = d_buf.get_start_iter()
-        end = d_buf.get_end_iter()
-        d = int(d_buf.get_text(start, end, False))
-        return PrivateKey(n, d)
+        try:
+            n = int(n_buf.get_text(start, end, include_hidden_chars=False))
+            start = d_buf.get_start_iter()
+            end = d_buf.get_end_iter()
+            d = int(d_buf.get_text(start, end, include_hidden_chars=False))
+            return PrivateKey(n, d)
+        except ValueError as e:
+            raise PrivateKeyError from e
+
+    def _show_alert(self, message: str) -> None:
+        """Show an alert dialog."""
+        dialog = Adw.AlertDialog(
+            title="Error",
+            body=message,
+        )
+        dialog.add_response(
+            "OK",
+            label="OK",
+        )
+        dialog.set_response_appearance("OK", Adw.ResponseAppearance.DESTRUCTIVE)
+        dialog.present(self.window)
