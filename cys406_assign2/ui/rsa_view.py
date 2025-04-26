@@ -152,8 +152,10 @@ class RSAView(Adw.Bin):
             margin_top=6,
             margin_bottom=6,
         )
-        self.split_view.set_sidebar(sidebar_box)
-        self.split_view.set_size_request(300, 0)
+        self.split_view.set_sidebar(Gtk.ScrolledWindow(child=sidebar_box, vexpand=True,
+            vscrollbar_policy=Gtk.PolicyType.AUTOMATIC,
+            hscrollbar_policy=Gtk.PolicyType.NEVER))
+        self.split_view.set_min_sidebar_width(250)
 
         # keygen button
         self.keygen_button = Gtk.Button(label="Generate Key Pair")
@@ -170,10 +172,11 @@ class RSAView(Adw.Bin):
         sidebar_box.append(self.keygen_button)
 
         # expander row for public key
-        public_key_expander = Adw.ExpanderRow(title="Public Key",
-            height_request=250)
+        public_key_expander = Adw.ExpanderRow(title="Public Key", height_request=80)
         self.pke = Gtk.TextView(wrap_mode=Gtk.WrapMode.CHAR, vexpand=True)
+        self.pke.set_size_request(0, 250)
         self.pkn = Gtk.TextView(wrap_mode=Gtk.WrapMode.CHAR, vexpand=True)
+        self.pkn.set_size_request(0, 250)
         public_key_expander.add_row(
             Gtk.Frame(
                 child=Gtk.ScrolledWindow(child=self.pke),
@@ -183,7 +186,7 @@ class RSAView(Adw.Bin):
         )
         public_key_expander.add_row(
             Gtk.Frame(
-                child=Gtk.ScrolledWindow(child=self.pkn),
+                child=Gtk.ScrolledWindow(child=self.pkn, min_content_height=200),
                 label="n",
                 margin_bottom=15
             )
@@ -196,14 +199,14 @@ class RSAView(Adw.Bin):
         self.prvd = Gtk.TextView(wrap_mode=Gtk.WrapMode.CHAR, vexpand=True)
         private_key_expander.add_row(
             Gtk.Frame(
-                child=Gtk.ScrolledWindow(child=self.prvd),
+                child=Gtk.ScrolledWindow(child=self.prvd, min_content_height=200),
                 label="d",
                 margin_bottom=15
             )
         )
         private_key_expander.add_row(
             Gtk.Frame(
-                child=Gtk.ScrolledWindow(child=self.prvn),
+                child=Gtk.ScrolledWindow(child=self.prvn, min_content_height=200),
                 label="n",
                 margin_bottom=15
             )
