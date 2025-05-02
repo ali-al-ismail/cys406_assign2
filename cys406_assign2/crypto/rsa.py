@@ -106,22 +106,22 @@ class RSA:
             return False
         r = 0
         d = n - 1
-        while d % 2 == 0:
+        while d % 2 == 0: # find d and r where 2^r * d = n - 1
             d //= 2
             r += 1
 
         for _ in range(acc):
-            a = secrets.randbelow(n - 4) + 2
-            x = pow(a, d, n)
+            a = secrets.randbelow(n - 4) + 2 # [2, n -2] random base
+            x = pow(a, d, n) # x = a^d mod n
 
-            if x == 1 or x == n - 1:
+            if x == 1 or x == n - 1: # passes this round
                 continue
 
-            for _ in range(r - 1):
+            for _ in range(r - 1): # square r-1 times
                 x = pow(x, 2, n)
-                if x == n - 1:
+                if x == n - 1: # if x == n - 1, pass
                     break
-            else:
+            else: # if we never broke then that means never x == n - 1, definitely composite
                 return False
 
         return True
