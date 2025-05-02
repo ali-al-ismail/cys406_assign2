@@ -127,18 +127,33 @@ class RSA:
         return True
 
     @staticmethod
-    def generate_keys(size: int = 512) -> tuple[PublicKey, PrivateKey]:
+    def generate_keys(
+        size: int = 512,
+        e: int = 65537) -> tuple[
+        PublicKey, PrivateKey
+        ]:
         """Generate an RSA key pair."""
-        p = RSA._generate_prime(size)
-        q = RSA._generate_prime(size)
-        while q == p:
+        if e < 3:
+            msg = "Public exponent must be at least 3."
+            raise ValueError(msg)
+        count = 0
+
+        while True:
+            count += 1
+            p = RSA._generate_prime(size)
             q = RSA._generate_prime(size)
+
+            if count > 20:
+                msg = "Failed to generate key, try a different exponent."
+                raise ValueError(msg)
+
+            if p == q:
+                continue
+            if gcd(e, (p - 1) * (q - 1)) == 1:
+                break
 
         n = p * q
         phi = (p - 1) * (q - 1)
-        e = 65537
-        while gcd(e, phi) != 1 or e >= phi:
-            e = secrets.randbelow(phi - 1) + 3
 
         d = pow(e, -1, phi)
         return PublicKey(n, e), PrivateKey(n, d)

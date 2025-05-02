@@ -14,6 +14,12 @@ def test_miller_rabin() -> None:
     assert RSA._miller_rabin(10007, 5)
 
 
+def test_generate_prime() -> None:
+    """Test the prime number generation."""
+    prime = RSA._generate_prime(512)
+    print()
+    print(f"Generated prime: {prime}")
+
 def test_keygen() -> None:
     """Test the RSA key generation."""
     public_key, private_key = RSA.generate_keys()

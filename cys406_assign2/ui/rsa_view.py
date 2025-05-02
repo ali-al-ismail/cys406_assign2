@@ -68,9 +68,19 @@ class KeyDialog(Adw.Dialog):
         self._prime_size.set_value(512)
         options.add(self._prime_size)
 
+        self._exponent = Adw.SpinRow.new_with_range(3, 65537, 1)
+        self._exponent.set_title("Public Exponent")
+        self._exponent.set_subtitle("Public exponent for RSA")
+        self._exponent.set_value(65537)
+        options.add(self._exponent)
+
     def get_prime_size(self) -> int:
         """Get the prime size."""
         return int(self._prime_size.get_value())
+
+    def get_exponent(self) -> int:
+        """Get the public exponent."""
+        return int(self._exponent.get_value())
 
 
 class VerifyDialog(Adw.Dialog):
@@ -279,7 +289,14 @@ class RSAView(Adw.Bin):
         def on_generate(_button: Gtk.Button) -> None:
             """Generate keys."""
             prime_size = dialog.get_prime_size()
-            public_key, private_key = RSA.generate_keys(prime_size)
+            exponent = dialog.get_exponent()
+
+            try:
+                public_key, private_key = RSA.generate_keys(prime_size, exponent)
+            except ValueError:
+                self._show_alert("Failed to generate keys, try a different exponent.")
+                return
+
             self.pke.get_buffer().set_text(str(public_key.e))
             self.pkn.get_buffer().set_text(str(public_key.n))
             self.prvn.get_buffer().set_text(str(private_key.n))
